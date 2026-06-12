@@ -12,13 +12,16 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
   ) {}
 
-  async create(createProductDto: CreateProductDto): Promise<Product> {
+  async create(createProductDto: CreateProductDto, merchantId?: string): Promise<Product> {
     const existing = await this.productsRepository.findOneBy({ sku: createProductDto.sku });
     if (existing) {
       throw new ConflictException('SKU already exists');
     }
 
-    const product = this.productsRepository.create(createProductDto);
+    const product = this.productsRepository.create({
+      ...createProductDto,
+      merchantId: merchantId ?? null,
+    });
     return this.productsRepository.save(product);
   }
 

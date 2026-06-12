@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Role } from '../../rbac/entities/role.entity';
 
 @Entity('users')
 export class User {
@@ -13,6 +14,10 @@ export class User {
 
   @Column({ select: false })
   password: string;
+
+  @ManyToMany(() => Role)
+  @JoinTable({ name: 'user_roles' })
+  roles: Role[];
 
   @CreateDateColumn()
   createdAt: Date;

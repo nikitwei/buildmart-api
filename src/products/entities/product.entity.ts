@@ -23,11 +23,14 @@ export class Product {
   @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
   rating: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
 
   @Column({ unique: true })
   sku: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  merchantId: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

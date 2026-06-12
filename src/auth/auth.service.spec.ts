@@ -9,11 +9,13 @@ jest.mock('bcrypt', () => ({
 }));
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
+import { RbacService } from '../rbac/rbac.service';
 
 describe('AuthService', () => {
   let service: AuthService;
   let usersService: UsersService;
   let jwtService: JwtService;
+  let rbacService: RbacService;
 
   const mockUsersService = {
     create: jest.fn(),
@@ -25,24 +27,31 @@ describe('AuthService', () => {
     sign: jest.fn(),
   };
 
+  const mockRbacService = {
+    assignRoleToUser: jest.fn(),
+    getUserPermissions: jest.fn().mockResolvedValue(new Set()),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: RbacService, useValue: mockRbacService },
       ],
     }).compile();
 
     service = module.get<AuthService>(AuthService);
     usersService = module.get<UsersService>(UsersService);
     jwtService = module.get<JwtService>(JwtService);
+    rbacService = module.get<RbacService>(RbacService);
   });
 
   afterEach(() => jest.clearAllMocks());
 
   describe('register', () => {
-    it('should create user and return token', async () => {
+    it('should create user, assign customer role, and return token', async () => {
       const dto = { email: 'test@test.com', name: 'Test', password: '12345678' };
       const savedUser = { id: 'uuid', email: dto.email, name: dto.name, createdAt: new Date(), updatedAt: new Date() };
 
@@ -54,6 +63,7 @@ describe('AuthService', () => {
       expect(result.accessToken).toBe('mocked-token');
       expect(result.user).toEqual(savedUser);
       expect(mockUsersService.create).toHaveBeenCalledWith(dto);
+      expect(mockRbacService.assignRoleToUser).toHaveBeenCalledWith(savedUser.id, 'customer');
       expect(mockJwtService.sign).toHaveBeenCalledWith({ sub: savedUser.id, email: savedUser.email });
     });
 
