@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Merchant } from '../../merchants/entities/merchant.entity';
 
 @Entity('products')
 export class Product {
@@ -28,6 +29,10 @@ export class Product {
 
   @Column({ unique: true })
   sku: string;
+
+  @ManyToOne(() => Merchant, { nullable: true })
+  @Column({ nullable: true })
+  merchantId: string | null;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -2,19 +2,21 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UsersService } from '../users/users.service';
+import { RbacService } from '../rbac/rbac.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    private readonly rbacService: RbacService,
   ) {}
 
   async register(dto: RegisterDto) {
     const user = await this.usersService.create(dto);
+    await this.rbacService.assignRoleToUser(user.id, 'customer');
     const accessToken = this.signToken(user);
     return { accessToken, user };
   }
@@ -36,7 +38,7 @@ export class AuthService {
     return { accessToken, user: userWithoutPassword };
   }
 
-  async validateUser(id: string): Promise<User> {
+  async validateUser(id: string) {
     try {
       return await this.usersService.findOne(id);
     } catch {
@@ -44,7 +46,7 @@ export class AuthService {
     }
   }
 
-  signToken(user: User): string {
+  signToken(user: { id: string; email: string }) {
     return this.jwtService.sign({ sub: user.id, email: user.email });
   }
 }

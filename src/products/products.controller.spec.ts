@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsController } from './products.controller';
 import { ProductsService } from './products.service';
+import { MerchantsService } from '../merchants/merchants.service';
 
 describe('ProductsController', () => {
   let controller: ProductsController;
@@ -14,10 +15,17 @@ describe('ProductsController', () => {
     remove: jest.fn(),
   };
 
+  const mockMerchantsService = {
+    findByOwner: jest.fn().mockResolvedValue({ id: 'merchant-uuid' }),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductsController],
-      providers: [{ provide: ProductsService, useValue: mockService }],
+      providers: [
+        { provide: ProductsService, useValue: mockService },
+        { provide: MerchantsService, useValue: mockMerchantsService },
+      ],
     }).compile();
 
     controller = module.get<ProductsController>(ProductsController);
@@ -28,10 +36,22 @@ describe('ProductsController', () => {
 
   it('should call service.create on POST /products', async () => {
     const dto = { name: 'Product', price: 100, category: 'cement' as const, sku: 'SKU-1' };
+    const user = { id: 'user-uuid', permissions: new Set<string>() };
 
-    await controller.create(dto);
+    await controller.create(dto, user);
 
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(mockMerchantsService.findByOwner).toHaveBeenCalledWith('user-uuid');
+    expect(service.create).toHaveBeenCalledWith(dto, 'merchant-uuid');
+  });
+
+  it('should skip merchant lookup for super admin on POST /products', async () => {
+    const dto = { name: 'Product', price: 100, category: 'cement' as const, sku: 'SKU-1' };
+    const admin = { id: 'admin-uuid', permissions: new Set(['all']) };
+
+    await controller.create(dto, admin);
+
+    expect(mockMerchantsService.findByOwner).not.toHaveBeenCalled();
+    expect(service.create).toHaveBeenCalledWith(dto, undefined);
   });
 
   it('should call service.findAll on GET /products', async () => {
