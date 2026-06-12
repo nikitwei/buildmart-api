@@ -1,5 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
-import { Merchant } from '../../merchants/entities/merchant.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('products')
 export class Product {
@@ -24,14 +23,13 @@ export class Product {
   @Column({ type: 'decimal', precision: 3, scale: 2, nullable: true })
   rating: number | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   imageUrl: string | null;
 
   @Column({ unique: true })
   sku: string;
 
-  @ManyToOne(() => Merchant, { nullable: true })
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   merchantId: string | null;
 
   @CreateDateColumn()

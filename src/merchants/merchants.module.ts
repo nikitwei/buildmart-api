@@ -9,5 +9,6 @@ import { RbacModule } from '../rbac/rbac.module';
   imports: [TypeOrmModule.forFeature([Merchant]), RbacModule],
   controllers: [MerchantsController],
   providers: [MerchantsService],
+  exports: [MerchantsService],
 })
 export class MerchantsModule {}
