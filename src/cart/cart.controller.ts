@@ -43,8 +43,8 @@ export class CartController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Cart item not found' })
-  updateItem(@Param('id') id: string, @Body() dto: UpdateCartItemDto) {
-    return this.cartService.updateItemQuantity(id, dto);
+  updateItem(@CurrentUser() user: { id: string }, @Param('id') id: string, @Body() dto: UpdateCartItemDto) {
+    return this.cartService.updateItemQuantity(user.id, id, dto);
   }
 
   @Delete('items/:id')
@@ -55,7 +55,7 @@ export class CartController {
   @ApiResponse({ status: 204, description: 'Item removed' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Cart item not found' })
-  removeItem(@Param('id') id: string) {
-    return this.cartService.removeItem(id);
+  removeItem(@CurrentUser() user: { id: string }, @Param('id') id: string) {
+    return this.cartService.removeItem(user.id, id);
   }
 }

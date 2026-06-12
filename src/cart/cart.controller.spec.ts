@@ -46,16 +46,19 @@ describe('CartController', () => {
   });
 
   it('should call cartService.updateItemQuantity on PATCH /cart/items/:id', async () => {
+    const user = { id: 'user-uuid' };
     const dto = { quantity: 10 };
 
-    await controller.updateItem('item-uuid', dto);
+    await controller.updateItem(user, 'item-uuid', dto);
 
-    expect(cartService.updateItemQuantity).toHaveBeenCalledWith('item-uuid', dto);
+    expect(cartService.updateItemQuantity).toHaveBeenCalledWith('user-uuid', 'item-uuid', dto);
   });
 
   it('should call cartService.removeItem on DELETE /cart/items/:id', async () => {
-    await controller.removeItem('item-uuid');
+    const user = { id: 'user-uuid' };
 
-    expect(cartService.removeItem).toHaveBeenCalledWith('item-uuid');
+    await controller.removeItem(user, 'item-uuid');
+
+    expect(cartService.removeItem).toHaveBeenCalledWith('user-uuid', 'item-uuid');
   });
 });

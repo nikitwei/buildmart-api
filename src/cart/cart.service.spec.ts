@@ -21,6 +21,7 @@ describe('CartService', () => {
 
   const mockCartItemRepo = {
     findOneBy: jest.fn(),
+    findOne: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
     remove: jest.fn(),
@@ -146,37 +147,52 @@ describe('CartService', () => {
 
   describe('updateItemQuantity', () => {
     it('should update quantity', async () => {
-      const item = { id: 'item-uuid', quantity: 5, productId: 'prod-1', cartId: 'cart-uuid' };
-      mockCartItemRepo.findOneBy.mockResolvedValue(item);
+      const item = { id: 'item-uuid', quantity: 5, productId: 'prod-1', cartId: 'cart-uuid', cart: { userId: 'user-uuid' } };
+      mockCartItemRepo.findOne.mockResolvedValue(item);
       mockCartItemRepo.save.mockResolvedValue({ ...item, quantity: 15 });
 
-      const result = await service.updateItemQuantity('item-uuid', { quantity: 15 });
+      const result = await service.updateItemQuantity('user-uuid', 'item-uuid', { quantity: 15 });
 
       expect(result.quantity).toBe(15);
     });
 
-    it('should throw NotFoundException when item does not exist', async () => {
-      mockCartItemRepo.findOneBy.mockResolvedValue(null);
+    it('should throw NotFoundException when item does not belong to user', async () => {
+      const item = { id: 'item-uuid', quantity: 5, productId: 'prod-1', cart: { userId: 'other-user' } };
+      mockCartItemRepo.findOne.mockResolvedValue(item);
 
-      await expect(service.updateItemQuantity('bad-id', { quantity: 5 })).rejects.toThrow(NotFoundException);
+      await expect(service.updateItemQuantity('user-uuid', 'item-uuid', { quantity: 5 })).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException when item does not exist', async () => {
+      mockCartItemRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.updateItemQuantity('user-uuid', 'bad-id', { quantity: 5 })).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('removeItem', () => {
     it('should remove item', async () => {
-      const item = { id: 'item-uuid', productId: 'prod-1', quantity: 1 };
-      mockCartItemRepo.findOneBy.mockResolvedValue(item);
+      const item = { id: 'item-uuid', productId: 'prod-1', quantity: 1, cart: { userId: 'user-uuid' } };
+      mockCartItemRepo.findOne.mockResolvedValue(item);
       mockCartItemRepo.remove.mockResolvedValue(undefined);
 
-      await service.removeItem('item-uuid');
+      await service.removeItem('user-uuid', 'item-uuid');
 
       expect(mockCartItemRepo.remove).toHaveBeenCalledWith(item);
     });
 
-    it('should throw NotFoundException when item does not exist', async () => {
-      mockCartItemRepo.findOneBy.mockResolvedValue(null);
+    it('should throw NotFoundException when item belongs to another user', async () => {
+      const item = { id: 'item-uuid', productId: 'prod-1', quantity: 1, cart: { userId: 'other-user' } };
+      mockCartItemRepo.findOne.mockResolvedValue(item);
 
-      await expect(service.removeItem('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.removeItem('user-uuid', 'item-uuid')).rejects.toThrow(NotFoundException);
+      expect(mockCartItemRepo.remove).not.toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException when item does not exist', async () => {
+      mockCartItemRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.removeItem('user-uuid', 'bad-id')).rejects.toThrow(NotFoundException);
     });
   });
 });
